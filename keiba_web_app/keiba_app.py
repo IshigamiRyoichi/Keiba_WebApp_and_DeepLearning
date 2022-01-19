@@ -12,83 +12,9 @@ import random
 from sklearn.model_selection import train_test_split
 from itertools import combinations
 
-# RankNet構築
-class RankNet(Model):
-    def __init__(self):
-        super().__init__()
-        self.dense = [layers.Dense(16, activation=leaky_relu), layers.Dense(8, activation=leaky_relu)]
-        self.o = layers.Dense(1, activation='linear')
-        self.oi_minus_oj = layers.Subtract()
-    
-    def call(self, inputs):
-        xi, xj = inputs
-        densei = self.dense[0](xi)
-        densej = self.dense[0](xj)
-        for dense in self.dense[1:]:
-            densei = dense(densei)
-            densej = dense(densej)
-        oi = self.o(densei)
-        oj= self.o(densej)
-        oij = self.oi_minus_oj([oi, oj])
-        output = layers.Activation('sigmoid')(oij)
-        return output
-    
-    def build_graph(self):
-        x = [Input(shape=(10)), Input(shape=(10))]
-        return Model(inputs=x, outputs=self.call(x))
 
-
-# ranknet
-ranknet = RankNet()
-years = [2020,2019,2018,2017,2016,2015,2014,2013,2012,2011]
-df = pd.read_csv("./documents/有馬記念Data.csv")
-df["タイム指数2-3"] = df["タイム指数2"] - df["タイム指数3"]
-
-index_num = 0
-xi = []
-xj = []
-pij = []
-pair_ids = []
-pair_query_id = []
-
-for year in years:
-    one_year_Data = df[df['年数'] == year]
-
-    index_list = [i for i in range(len(one_year_Data))]
-    random.shuffle(index_list)
-    for pair_id in combinations(index_list, 2):
-        pair_query_id.append(year)
-        pair_ids.append(pair_id)
-        i = pair_id[0]
-        j = pair_id[1]
-        xi.append([one_year_Data.at[i+index_num,"タイム指数2"],one_year_Data.at[i+index_num,"タイム指数2-3"],one_year_Data.at[i+index_num,"上り"]])
-        xj.append([one_year_Data.at[j+index_num,"タイム指数2"],one_year_Data.at[j+index_num,"タイム指数2-3"],one_year_Data.at[j+index_num,"上り"]])
-
-        if one_year_Data.at[i+index_num,"順位"]  == one_year_Data.at[j+index_num,"順位"] :
-            pij_com = 0.5
-
-        elif one_year_Data.at[i+index_num,"順位"]  > one_year_Data.at[j+index_num,"順位"] :
-            pij_com = 0
-
-        else:
-            pij_com = 1
-
-        pij.append(pij_com)
-    index_num += len(one_year_Data)
-    index_list.clear()
-
-xi = np.array(xi)
-xj = np.array(xj)
-pij = np.array(pij)
-pair_query_id = np.array(pair_query_id)
-
-xi_train, xi_test, xj_train, xj_test, pij_train, pij_test, pair_id_train, pair_id_test = train_test_split(
-    xi, xj, pij, pair_ids, test_size=0.2, stratify=pair_query_id)
-
-ranknet.compile(optimizer='adam', loss='binary_crossentropy',metrics=['accuracy'])
-# ranknet.compile(optimizer='sgd', loss='binary_crossentropy',metrics=['accuracy'])
-ranknet.fit([xi_train, xj_train], pij_train, epochs=85, batch_size=4, validation_data=([xi_test, xj_test], pij_test))
-
+# ranknetの読み込み
+ranknet = load_model("./documents/keiba_ranknet_model")
 # resnetの読み込み
 resnet =load_model("./documents/hourse_resnet.h5")
 
