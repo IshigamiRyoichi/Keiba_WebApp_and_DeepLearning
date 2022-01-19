@@ -9,8 +9,6 @@ import random
 from sklearn.model_selection import train_test_split
 import pandas as pd
 from itertools import combinations
-import os
-import joblib
 
 # model architecture
 class RankNet(Model):
@@ -32,7 +30,7 @@ class RankNet(Model):
         oij = self.oi_minus_oj([oi, oj])
         output = layers.Activation('sigmoid')(oij)
         return output
-    
+
     def build_graph(self):
         x = [Input(shape=(10)), Input(shape=(10))]
         return Model(inputs=x, outputs=self.call(x))
@@ -101,18 +99,17 @@ score = ranknet.evaluate([xi_test, xj_test], pij_test, batch_size=32, verbose=0)
 print('validation loss:{0[0]}\nvalidation accuracy:{0[1]}'.format(score))
 
 # tf.keras.models.save_model(ranknet,'keiba_ranknet_model')
-# ranknet.save("./keiba_ranknet_model.keras", include_optimizer=False)
+ranknet.save("./keiba_ranknet_model")
 # ranknet.save_weights("./keiba_ranknet.hdf5", save_format="hdf5")
-# ranknet.save_weights("./keiba_ranknet.h5", save_format="h5")
-
+ranknet.save_weights("./keiba_ranknet.hdf5")
 # joblib.dump(ranknet,'keiba_ranknet_model.pkl2', compress=2)
 
 
 # f_log = './log/'
 # f_model = './model/'
 
-# # json_string = ranknet.to_json()
-# open(os.path.join(f_model,'ranknet_model.json'), 'w').write(ranknet.model_from_json())
+# json_string = ranknet.to_json()
+# open('./ranknet_model.json', 'w').write(json_string)
 # # yaml_string = ranknet.to_yaml()
 # open(os.path.join(f_model,'ranknet_model.yaml'), 'w').write(ranknet.to_yaml())
 # print('save weights')
