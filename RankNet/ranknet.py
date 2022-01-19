@@ -31,11 +31,6 @@ class RankNet(Model):
         output = layers.Activation('sigmoid')(oij)
         return output
 
-    def build_graph(self):
-        x = [Input(shape=(10)), Input(shape=(10))]
-        return Model(inputs=x, outputs=self.call(x))
-
-
 years = [2020,2019,2018,2017,2016,2015,2014,2013,2012,2011]
 df = pd.read_csv("./有馬記念Data.csv")
 df["タイム指数2-3"] = df["タイム指数2"] - df["タイム指数3"]
